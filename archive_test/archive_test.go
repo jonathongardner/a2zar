@@ -7,6 +7,7 @@ import (
 
 	"github.com/jonathongardner/a2zar/ar"
 	"github.com/jonathongardner/a2zar/archive"
+	"github.com/jonathongardner/a2zar/cpio/newc"
 	"github.com/jonathongardner/a2zar/internal/test"
 	"github.com/jonathongardner/a2zar/xar"
 )
@@ -44,6 +45,20 @@ func TestArchiveReader(t *testing.T) {
 				knownPaths["foo"],
 				// ar doesnt have symlink so it follows to the value
 				knownPaths["foo"].WithPath("symlink"),
+			},
+		},
+		{
+			name: "newc.cpio",
+			readerFunc: func(f *os.File) (archive.Reader, error) {
+				return newc.NewReader(f)
+			},
+			exp: []entry{
+				knownPaths["readme.md"],
+				knownPaths["bar"],
+				knownPaths["baz"],
+				knownPaths["symlink"],
+				knownPaths["chew"],
+				knownPaths["foo"],
 			},
 		},
 	}

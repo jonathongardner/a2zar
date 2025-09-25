@@ -7,7 +7,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/jonathongardner/a2zar/ar"
 	"github.com/jonathongardner/a2zar/archive"
+	"github.com/jonathongardner/a2zar/cpio/newc"
 	"github.com/jonathongardner/a2zar/xar"
 )
 
@@ -27,11 +29,15 @@ func main() {
 		}
 	}()
 
-	var ar archive.Reader
+	var aReader archive.Reader
 	typ := os.Args[1]
 	switch typ {
 	case "xar":
-		ar, err = xar.NewReader(file)
+		aReader, err = xar.NewReader(file)
+	case "ar":
+		aReader, err = ar.NewReader(file)
+	case "newc.cpio":
+		aReader, err = newc.NewReader(file)
 	default:
 		panic(fmt.Errorf("unknown type %v", typ))
 	}
@@ -40,7 +46,7 @@ func main() {
 	}
 
 	for {
-		fi, err := ar.NextHeader()
+		fi, err := aReader.NextHeader()
 		if err == io.EOF {
 			break
 		}
@@ -69,7 +75,7 @@ func main() {
 		if fi.Mode().IsRegular() {
 			// print the sha1 of the xr reader
 			h := sha1.New()
-			if _, err := io.Copy(h, ar); err != nil {
+			if _, err := io.Copy(h, aReader); err != nil {
 				panic(fmt.Errorf("failed to compute sha1: %v", err))
 			}
 			fmt.Printf("  sha1: %x\n", h.Sum(nil))

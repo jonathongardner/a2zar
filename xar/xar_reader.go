@@ -11,7 +11,7 @@ import (
 	"io"
 
 	"github.com/jonathongardner/a2zar/archive"
-	"github.com/jonathongardner/a2zar/internal/rno"
+	"github.com/jonathongardner/a2zar/internal/iio"
 )
 
 const (
@@ -35,7 +35,7 @@ func NewReader(reader io.ReaderAt) (*XarReader, error) {
 	xr := &XarReader{
 		reader:     reader,
 		position:   0,
-		fileReader: rno.NewReader(),
+		fileReader: iio.NewNotOpenErrorReader(),
 	}
 
 	// xar file = Header + TOC + Heap
@@ -139,7 +139,7 @@ func (xr *XarReader) NextHeader() (archive.Header, error) {
 // returns an error if the file type is unknown
 func (xr *XarReader) Next() (*XarFileInfo, error) {
 	if xr.position >= int64(len(xr.fileInfo)) {
-		xr.fileReader = rno.NewReader()
+		xr.fileReader = iio.NewClosedErrorReader()
 		return nil, io.EOF
 	}
 

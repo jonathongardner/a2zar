@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jonathongardner/a2zar/archive"
+	"github.com/jonathongardner/a2zar/internal/iio"
 )
 
 // Reader allows to sequentially read ar files by first reading an entry's
@@ -28,9 +29,9 @@ type Reader struct {
 	// characters.
 	DisableGnuExtensions bool
 
-	r             io.Reader
-	remainingSize int64
-	expectPadding bool
+	r io.Reader
+	// dr data reader, a limit reader ouround r
+	dr            iio.PadReader
 	headerBuffer  []byte
 	gnuNameBuffer []byte
 }
@@ -50,7 +51,7 @@ func NewReader(r io.Reader) (*Reader, error) {
 			string(globalHeaderBuffer), GlobalHeader, ErrInvalidGlobalHeader)
 	}
 
-	return &Reader{r: r, headerBuffer: make([]byte, HeaderSize)}, nil
+	return &Reader{r: r, headerBuffer: make([]byte, HeaderSize), dr: iio.NewNotOpenErrorReader()}, nil
 }
 
 // Next returns the header of the next file entry in the ar file and enables
@@ -59,16 +60,8 @@ func NewReader(r io.Reader) (*Reader, error) {
 // previous file will be skipped automatically.
 func (r *Reader) Next() (*Header, error) {
 	// skip unread bytes of previous entry and padding if necessary
-	if r.expectPadding || r.remainingSize > 0 {
-		_, err := io.CopyN(io.Discard,
-			r.r, r.remainingSize+boolToInt64(r.expectPadding))
-		if err != nil {
-			return nil, fmt.Errorf("skip to next header: %w", err)
-		}
-		// reset these after reading so if this `Next` method gets
-		// called recursivly it doesnt try reading data again
-		r.expectPadding = false
-		r.remainingSize = 0
+	if err := r.dr.Pad(); err != nil {
+		return nil, fmt.Errorf("pad to next header: %w", err)
 	}
 
 	var hdr Header
@@ -84,12 +77,7 @@ func (r *Reader) Next() (*Header, error) {
 		return nil, fmt.Errorf("parse header: %w", err)
 	}
 
-	r.remainingSize = hdr.size
-
-	// anounce padding
-	if hdr.size%2 != 0 {
-		r.expectPadding = true
-	}
+	r.dr = iio.NewLimitPadReader(r.r, hdr.size, 2)
 
 	return &hdr, nil
 }
@@ -100,22 +88,7 @@ func (r *Reader) NextHeader() (archive.Header, error) {
 
 // Read reads the file content of the entry whose header was previously read using Next.
 func (r *Reader) Read(buffer []byte) (n int, err error) {
-	if r.remainingSize == 0 {
-		return 0, io.EOF
-	}
-
-	if int64(len(buffer)) > r.remainingSize {
-		buffer = buffer[:r.remainingSize]
-	}
-
-	n, err = r.r.Read(buffer)
-	if err != nil {
-		return n, err
-	}
-
-	r.remainingSize -= int64(n)
-
-	return n, err
+	return r.dr.Read(buffer)
 }
 
 var (
@@ -294,12 +267,4 @@ func unpackString(field []byte) string {
 
 func extractFromByteField(field []byte) string {
 	return strings.TrimRight(string(field), " ")
-}
-
-func boolToInt64(b bool) int64 {
-	if b {
-		return 1
-	}
-
-	return 0
 }

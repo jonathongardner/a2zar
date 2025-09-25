@@ -8,6 +8,14 @@ import (
 	"testing"
 )
 
+// FatalEqual fatal if erros not equal
+func FatalEqual[T comparable](t *testing.T, want T, got T, msg string) {
+	if got != want {
+		t.Fatalf("%s: want %v, got %v", msg, want, got)
+	}
+}
+
+// AssertEqual error if not equal
 func AssertEqual[T comparable](t *testing.T, want T, got T, msg string) {
 	if got != want {
 		t.Errorf("%s: want %v, got %v", msg, want, got)
@@ -47,4 +55,11 @@ func AssertSha1(t *testing.T, expected string, r io.Reader, msg string) {
 
 	actual := fmt.Sprintf("%x", h.Sum(nil))
 	AssertEqual(t, expected, actual, msg)
+}
+
+// CheckError fails if any errors
+func CheckError(t *testing.T) {
+	if t.Failed() {
+		t.Fail()
+	}
 }
