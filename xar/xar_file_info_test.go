@@ -162,17 +162,18 @@ func TestFileInfo(t *testing.T) {
 
 	for _, tt := range toTest {
 		t.Run(tt.exp.name, func(t *testing.T) {
-			assertFileInfo(t, newFileInfo(tt.passedPath, tt.xar), tt.exp, "")
+			nfi := newFileInfo(tt.passedPath, tt.xar)
+			assertFileInfo(t, nfi, tt.exp, "", nfi.headerErrs())
 		})
 	}
 }
 
-func assertFileInfo(t *testing.T, fi *XarFileInfo, exp expXar, msg string) {
+func assertFileInfo(t *testing.T, fi *XarFileInfo, exp expXar, msg string, err error) {
 	test.AssertEqual(t, exp.name, fi.Name(), msg+"FileInfo should have correct name")
 	test.AssertEqual(t, exp.path, fi.Path(), msg+"FileInfo should have correct path")
 	test.AssertEqual(t, exp.size, fi.Size(), msg+"FileInfo should have correct size")
 	test.AssertEqual(t, exp.mode, fi.Mode(), msg+"FileInfo should have correct mode")
 	test.AssertEqual(t, exp.modTime, fi.ModTime(), msg+"FileInfo should have correct modTime")
 	test.AssertEqual(t, exp.symlink, fi.Symlink(), msg+"FileInfo should have correct symlink")
-	test.AssertErrors(t, exp.errs, fi.ParsingError(), msg+"FileInfo should have correct error")
+	test.AssertErrors(t, exp.errs, err, msg+"FileInfo should have correct error")
 }

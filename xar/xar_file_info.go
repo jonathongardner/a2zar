@@ -64,6 +64,8 @@ func newFileInfo(dir string, xf *xarFile) *XarFileInfo {
 // add errors to the errs field if the mode is invalid. Fixes
 // the mode to be a valid file type
 func (fi *XarFileInfo) parseMod(mode string, typeMode os.FileMode) {
+	// default to the mode so that if there is an error the mod is at least correct
+	fi.mode = typeMode
 	if mode == "" {
 		fi.errs = append(fi.errs, fmt.Errorf("%w: empty", ErrInvalidMode))
 		return
@@ -106,10 +108,14 @@ func (fi *XarFileInfo) checkSize0(size int64) {
 	}
 }
 
-// unknownTypeErr returns an error if the file type is unknown
-func (fi *XarFileInfo) unknownTypeErr() error {
+// headerErrs returns ErrUnknownFileType if the file type is unknown
+// or ErrInvalidHeader if there was an error paring the ToC
+func (fi *XarFileInfo) headerErrs() error {
 	if fi.unknownType {
 		return fmt.Errorf("%w: %v", ErrUnknownFileType, fi.file.Type)
+	}
+	if len(fi.errs) > 0 {
+		return fmt.Errorf("%w: %w", ErrInvalidHeader, errors.Join(fi.errs...))
 	}
 	return nil
 }
@@ -159,9 +165,4 @@ func (fi *XarFileInfo) Path() string {
 // Symlink returns the target of the symlink or an empty string if the file is not a symlink
 func (fi *XarFileInfo) Symlink() string {
 	return fi.symlink
-}
-
-// ParsingError returns the errors that occurred during parsing
-func (fi *XarFileInfo) ParsingError() error {
-	return errors.Join(fi.errs...)
 }

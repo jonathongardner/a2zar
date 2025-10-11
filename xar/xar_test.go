@@ -130,12 +130,9 @@ func TestReadingXar(t *testing.T) {
 		if err == io.EOF {
 			break
 		}
-		if err != nil {
-			t.Fatal(fmt.Errorf("failed to read file: %v", err))
-		}
 
 		msg := fmt.Sprintf("index: %d ", count)
-		assertFileInfo(t, fi, expTar[count].exp, msg)
+		assertFileInfo(t, fi, expTar[count].exp, msg, err)
 
 		expSha1 := expTar[count].sha1
 		if expSha1 != emptySha1 {

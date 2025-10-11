@@ -143,7 +143,7 @@ func (xr *XarReader) Next() (*XarFileInfo, error) {
 		return nil, err
 	}
 
-	return fileInfo, fileInfo.unknownTypeErr()
+	return fileInfo, fileInfo.headerErrs()
 }
 
 func (xr *XarReader) openFile(xf *xarFile) (io.Reader, error) {

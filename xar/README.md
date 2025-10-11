@@ -42,6 +42,10 @@ func main() {
 			fmt.Printf("name: %s, err: %v\n", fi.Path(), err)
 			continue
 		}
+		if errors.Is(err, xar.ErrInvalidFileInfo) {
+			fmt.Printf("name: %s, err: %v\n", fi.Path(), err)
+			continue
+		}
 		if err != nil {
 			panic(fmt.Errorf("failed to read file: %v", err))
 		}
@@ -50,11 +54,10 @@ func main() {
 		// if symlink, print the target
 		if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
 			fmt.Print("  symlink: %v\n", fi.Symlink())
+			continue
 		}
-
-		// check if any parsing errors occurred building the header
-		if perr := fi.ParsingError(); perr != nil {
-			fmt.Printf("  parsing error: %v\n", perr)
+		if fi.Mode().IsDir() {
+			continue
 		}
 
 		if fi.Mode().IsRegular() {
@@ -64,6 +67,7 @@ func main() {
 				panic(fmt.Errorf("failed to compute sha1: %v", err))
 			}
 			fmt.Printf("  sha1: %x\n", h.Sum(nil))
+			continue
 		}
 	}
 }
