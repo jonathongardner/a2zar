@@ -8,6 +8,8 @@ import (
 	"path"
 	"strconv"
 	"time"
+
+	"github.com/jonathongardner/a2zar/archive"
 )
 
 const (
@@ -112,7 +114,7 @@ func (fi *XarFileInfo) checkSize0(size int64) {
 // or ErrInvalidHeader if there was an error paring the ToC
 func (fi *XarFileInfo) headerErrs() error {
 	if fi.unknownType {
-		return fmt.Errorf("%w: %v", ErrUnknownFileType, fi.file.Type)
+		return fmt.Errorf("%w: %v", archive.ErrUnknownFileType, fi.file.Type)
 	}
 	if len(fi.errs) > 0 {
 		return fmt.Errorf("%w: %w", ErrInvalidHeader, errors.Join(fi.errs...))

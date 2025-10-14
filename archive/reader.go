@@ -9,6 +9,7 @@ import (
 type Header interface {
 	os.FileInfo
 	Path() string
+	Symlink() string
 }
 
 // Reader a reader with `NextHeader` to iterate over entries in archives
