@@ -9,6 +9,8 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+
+	"github.com/jonathongardner/a2zar/archive"
 )
 
 const (
@@ -122,11 +124,18 @@ func (xr *XarReader) readToc() error {
 	return xml.NewDecoder(zr).Decode(&xr.toc)
 }
 
+// NextHeader reads the next file in the xar archive and returns its information.
+// returns io.EOF when there are no more files to read.
+// returns an error if the file cannot be read
+// returns an error if the file type is unknown
+func (xr *XarReader) NextHeader() (archive.Header, error) {
+	return xr.Next()
+}
+
 // Next reads the next file in the xar archive and returns its information.
 // returns io.EOF when there are no more files to read.
 // returns an error if the file cannot be read
 // returns an error if the file type is unknown
-// use ParseError to check for parse header errors
 func (xr *XarReader) Next() (*XarFileInfo, error) {
 	if xr.position >= int64(len(xr.fileInfo)) {
 		xr.fileReader = errReader{}

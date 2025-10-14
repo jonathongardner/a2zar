@@ -14,6 +14,12 @@ func AssertEqual[T comparable](t *testing.T, want T, got T, msg string) {
 	}
 }
 
+func AssertEqualF[T comparable](t *testing.T, want T, got T, msg string, args ...any) {
+	if got != want {
+		t.Errorf("%s: want %v, got %v", fmt.Sprintf(msg, args...), want, got)
+	}
+}
+
 func AssertErrors(t *testing.T, want []error, got error, msg string) {
 	t.Helper()
 

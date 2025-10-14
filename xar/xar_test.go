@@ -108,7 +108,7 @@ func TestReadingXar(t *testing.T) {
 			},
 		},
 	}
-	file, err := os.Open(test.LargeFile("go1.24.5.darwin-arm64.pkg"))
+	file, err := os.Open(test.LargeFile("xar/go1.24.5.darwin-arm64.pkg"))
 	if err != nil {
 		t.Fatalf("failed to open file: %v", err)
 	}
