@@ -1,4 +1,4 @@
 # Example
 ```golang
-go run main.go xar file/path/to/foo.xar
+go run main.go type file/path/to/archive.type
 ```

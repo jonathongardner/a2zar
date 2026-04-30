@@ -1,16 +1,17 @@
-# XAR
+# AR
 
-XAR is a Go subpackage for reading XAR files. 
+AR is a Go subpackage for reading AR files. 
 
 ## Example
 Example can be found [here](../example/README.md)
 ```
-go run main.go xar file/path/to/foo.xar
+go run main.go ar file/path/to/foo.ar
 ```
 
 ## Dev
 ### Golden Image
 ```
+ar rcs ../ar/golden-archive.ar README.md bar/baz bar/symlink chew foo
 ```
 
 ## Credit
