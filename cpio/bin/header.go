@@ -1,7 +1,6 @@
-package newc
+package bin
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -13,17 +12,17 @@ import (
 )
 
 var (
-	magic         = [6]byte{48, 55, 48, 55, 48, 49} // "070701"
-	extendedMagic = [6]byte{48, 55, 48, 55, 48, 88} // "07070X"
+	magicBig    = [2]byte{113, 199} // 0x71 0xC7 uint16(070707)
+	magicLittle = [2]byte{199, 113} // 0xC7 0x71 uint16(070707)
 )
 
 const (
 	trailer = "TRAILER!!!"
-	block   = 4
+	block   = 2
 )
 
 type Header struct {
-	magic    [6]byte
+	magic    uint16
 	mode     os.FileMode
 	mtime    time.Time
 	filesize int64
@@ -71,65 +70,38 @@ func (nch *Header) isTrailer() bool {
 	return nch.filename == trailer
 }
 
-// extended returns true if the magic matches the extended header (large than 4GB)
-func (nch *Header) isExtended() bool {
-	return nch.magic == extendedMagic
-}
-
-// normal returns true if the header matches the expected magic
-func (nch *Header) isNormal() bool {
-	return nch.magic == magic
-}
-
 // loadFields loads fields based on magic
 // return io.EOF if header is trailer
-func (nch *Header) loadFields(r *Reader) error {
-	// if no bytes are it will return io.ErrUnexpectedEOF
-	if _, err := iio.ReadFull(r.r, nch.magic[:]); err != nil {
-		return err
-	}
-
-	if nch.isNormal() {
-		return nch.loadNormalFields(r)
-	}
-	return fmt.Errorf("not supported yet")
-}
-
-// loadNormalFields loads the normal fields
-// return io.EOF it header is trailer
-func (nch *Header) loadNormalFields(ar *Reader) error {
-	fields, err := readHex(ar.r, 13)
+func (nch *Header) loadFields(ar *Reader) error {
+	shorts, err := readShorts(ar.r, 13)
 	if err != nil {
 		return err
 	}
-	// magic 0-8
-	// ino 6-14
-	// mode 14-22
-	// uid 22-30
-	// gid 30-38
-	// nlink 38-46
-	// mtime 46-54
-	// filesize 54-62
-	// devmajor 62-70
-	// devminor 70-78
-	// rdevmajor 78-86
-	// rdevminor 86-94
-	// namesize 94-102
-	// check 102-110
+	// 0: Magic    0-2
+	// 1: Dev      2-4
+	// 2: Ino      4-6
+	// 3: Mode     6-8
+	// 4: Uid      8-10
+	// 5: Gid      10-12
+	// 6: Nlink    12-14
+	// 7: Rdev     14-16
+	// 8-9: Mtime    16-20
+	// 10: NameSize 20-22
+	// 11-12: FileSize 22-26
 
-	nch.mode = utils.UnixToMode(fields[1])
-	nch.mtime = time.Unix(fields[5], 0)
-	nch.filesize = fields[6]
+	nch.magic = shorts[0]
+	nch.mode = utils.UnixToMode(int64(shorts[3]))
+	nch.mtime = time.Unix(int64(toUint32(shorts[8:10])), 0)
+	nch.filesize = int64(toUint32(shorts[11:13]))
 
-	namesize := fields[11]
-	// offset 110 for headers
-	pr := iio.NewLimitPadReaderWithOffset(ar.r, namesize, 110, block)
+	namesize := int64(shorts[10])
+	// offset 26 for headers
+	pr := iio.NewLimitPadReaderWithOffset(ar.r, namesize, 26, block)
 	buf, err := io.ReadAll(pr)
 	// if we get error no need to pad
 	if err != nil {
 		return err
 	}
-
 	if err := pr.Pad(); err != nil {
 		return err
 	}

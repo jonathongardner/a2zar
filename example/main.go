@@ -9,6 +9,7 @@ import (
 
 	"github.com/jonathongardner/a2zar/ar"
 	"github.com/jonathongardner/a2zar/archive"
+	"github.com/jonathongardner/a2zar/cpio/bin"
 	"github.com/jonathongardner/a2zar/cpio/newc"
 	"github.com/jonathongardner/a2zar/xar"
 )
@@ -38,6 +39,8 @@ func main() {
 		aReader, err = ar.NewReader(file)
 	case "newc.cpio":
 		aReader, err = newc.NewReader(file)
+	case "bin.cpio":
+		aReader, err = bin.NewReader(file)
 	default:
 		panic(fmt.Errorf("unknown type %v", typ))
 	}

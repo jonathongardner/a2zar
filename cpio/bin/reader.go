@@ -1,4 +1,4 @@
-package newc
+package bin
 
 import (
 	"fmt"

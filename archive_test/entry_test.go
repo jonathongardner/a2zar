@@ -19,7 +19,7 @@ var knownPaths = map[string]entry{
 	"bar":       {path: "bar", mode: 0755 | os.ModeDir, mtime: time.Unix(1623623276, 0)},
 	"baz":       {path: "bar/baz", size: 5, mode: 0644, mtime: time.Unix(1703495492, 0), sha1: "886f90cb542138934de905357d0fdbf35c6bff33"},
 	"chew":      {path: "chew", size: 2048, mode: 0644, mtime: time.Unix(1596296051, 0), sha1: "c12306b17f72062188d6bbfe7a76f15945a8e1a6"},
-	"foo":       {path: "foo", size: 512, mode: 0644, mtime: time.Unix(1777896080, 0), sha1: "aec2d949eea7b34ee3e91baf40a03879e59b2935"},
+	"foo":       {path: "foo", size: 513, mode: 0644, mtime: time.Unix(1777896080, 0), sha1: "786366fc6986e87f263672560454145ddffbaac5"},
 	"symlink":   {path: "bar/symlink", mode: 0777 | os.ModeSymlink, mtime: time.Unix(1779562240, 0), symlink: "../foo"},
 }
 

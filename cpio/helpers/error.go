@@ -1,4 +1,4 @@
-package newc
+package helpers
 
 import "errors"
 
